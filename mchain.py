@@ -1,6 +1,7 @@
 import hashlib
 import json
 from datetime import datetime
+import numpy as np
 
 class mchain(list):
 
@@ -11,7 +12,7 @@ class mchain(list):
 
     def createGenesisBlock(self):
         gb = mchain_block(0,'Genesis Block', 0)
-        gb.hash = gb.calculateHash()
+        gb.hash = gb.generateHash()
         return gb
 
     def getLatestBlock(self):
@@ -22,8 +23,8 @@ class mchain(list):
         :type newBlock: mchain_block
         """
         prevBlock = self.getLatestBlock()
-        newBlock.lastHash =prevBlock.hash
-        newBlock.hash = newBlock.calculateHash()
+        newBlock.previousHash =prevBlock.hash
+        newBlock.hash = newBlock.generateHash()
         self.append(newBlock)
 
     def isChainValid(self):
@@ -35,7 +36,7 @@ class mchain(list):
                 print(f'Block_id({currentBlock.block_id}), hash={currentBlock.hash}')
                 print(f'Invalid current hash: {currentBlock.calculateHash()}')
                 return False
-            if (prevBlock.hash != currentBlock.lastHash):
+            if (prevBlock.hash != currentBlock.previousHash):
                 print(f'Invalid previous hash({currentBlock.block_id}): {prevBlock.hash} : {currentBlock.previousHash}')
                 return False
         return True
@@ -45,7 +46,7 @@ class mchain(list):
                           sort_keys=True, indent=4)
 
 class mchain_block():
-    
+
     def __init__(self, block_id, data, previousHash = ''):
         """"""
         self.block_id = str(block_id)
@@ -53,12 +54,28 @@ class mchain_block():
         self.data = json.dumps(data)
         self.previousHash = str(previousHash)
         self.hash = ''
+        self.nonce = ''
 
     def calculateHash(self):
         h = hashlib.sha256()
-        for _ in [self.block_id.encode(), self.previousHash.encode(), self.timestamp.encode(), self.data.encode()]:
+        for _ in [self.block_id.encode(),
+        self.previousHash.encode(),
+        self.timestamp.encode(),
+        self.data.encode(),
+        self.nonce.encode()]:
             h.update(_)
         return h.hexdigest()
+
+    def generateHash(self):
+        candidate_hash = ""
+        while not str(candidate_hash).startswith("000"):
+            self.nonce = str(np.random.rand())
+            candidate_hash = self.calculateHash()
+        print(f'Found a good nonce {self.nonce}.  Hash = {candidate_hash}')
+        return candidate_hash
+
+    def hash_string(self,s):
+        return
 
 
 if __name__ == "__main__":
@@ -68,8 +85,8 @@ if __name__ == "__main__":
     nChain.addBlock(mchain_block(3,'otherData2'))
 
     print(f'{nChain.toJSON()}')
-    assert nChain.isChainValid()
+    print(f'Unmodified chain is good? {nChain.isChainValid()}')
 
     nChain[1].data = 'otherData 2'
-    assert not nChain.isChainValid()
+    print(f'Modified chain is good? {nChain.isChainValid()}')
 

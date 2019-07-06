@@ -1,8 +1,6 @@
 import hashlib
 import json
 from datetime import datetime
-from uu import encode
-
 
 class mchain(list):
 
@@ -70,7 +68,8 @@ if __name__ == "__main__":
     nChain.addBlock(mchain_block(3,'otherData2'))
 
     print(f'{nChain.toJSON()}')
-    print(f'Is chain valid? {nChain.isChainValid()}')
+    assert nChain.isChainValid()
 
     nChain[1].data = 'otherData 2'
-    print(f'Is chain valid? {nChain.isChainValid()}')
+    assert not nChain.isChainValid()
+

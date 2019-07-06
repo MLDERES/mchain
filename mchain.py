@@ -5,14 +5,17 @@ import numpy as np
 
 class mchain(list):
 
-    def __init__(self, *args):
+    min_length = 0
+    def __init__(self, min_length = 3, *args):
         """"""
         list.__init__(self, *args)
         self.append(self.createGenesisBlock())
+        self.min_length = min_length
+
 
     def createGenesisBlock(self):
         gb = mchain_block(0,'Genesis Block', 0)
-        gb.hash = gb.generateHash()
+        gb.hash = gb.generateHash(self.min_length)
         return gb
 
     def getLatestBlock(self):
@@ -24,7 +27,7 @@ class mchain(list):
         """
         prevBlock = self.getLatestBlock()
         newBlock.previousHash =prevBlock.hash
-        newBlock.hash = newBlock.generateHash()
+        newBlock.hash = newBlock.generateHash(self.min_length)
         self.append(newBlock)
 
     def isChainValid(self):
@@ -66,12 +69,14 @@ class mchain_block():
             h.update(_)
         return h.hexdigest()
 
-    def generateHash(self):
+    def generateHash(self, min_zeros):
         candidate_hash = ""
-        while not str(candidate_hash).startswith("000"):
+        now = datetime.now()
+        while not str(candidate_hash).startswith("0"*min_zeros):
             self.nonce = str(np.random.rand())
             candidate_hash = self.calculateHash()
-        print(f'Found a good nonce {self.nonce}.  Hash = {candidate_hash}')
+        print(f'Found a good nonce {self.nonce}.  Hash = {candidate_hash} ')
+        print(f'Time to find hash = {(datetime.now()-now).seconds} seconds')
         return candidate_hash
 
     def hash_string(self,s):
@@ -79,7 +84,7 @@ class mchain_block():
 
 
 if __name__ == "__main__":
-    nChain = mchain()
+    nChain = mchain(min_length=5)
     nChain.addBlock(mchain_block(1,'someData'))
     nChain.addBlock(mchain_block(2,'otherData'))
     nChain.addBlock(mchain_block(3,'otherData2'))
